@@ -3,7 +3,10 @@ package com.example.paragonPioneerBackend.Bin.Config.Data.EntityInserters;
 import com.example.paragonPioneerBackend.Dto.GoodDTO;
 import com.example.paragonPioneerBackend.Service.GoodService;
 import lombok.RequiredArgsConstructor;
+import me.tongfei.progressbar.ProgressBar;
 import org.springframework.stereotype.Component;
+
+import java.util.function.Supplier;
 
 /**
  * A component responsible for populating the database with initial goods data.
@@ -123,18 +126,32 @@ public class GoodInserter {
     };
 
     /**
-     * Executes the insertion of predefined goods data into the database.
-     * Iterates through each record in the predefined list and uses the GoodService
-     * to create a new Good entity for each, populating the application's database
-     * with essential goods data.
+     * Returns the number of data insertion tasks for goods.
+     *
+     * @return The number of data insertion tasks.
      */
-    public void run() {
+    public int getInsertsLength() {
+        return inserts.length;
+    }
+
+    /**
+     * Executes the data insertion tasks for goods.
+     * This method is called by the InsertRunner component, providing an entry point
+     * for running the inserter components.
+     *
+     * @param progressBarSupplier Supplier for a progress bar to display the insertion progress.
+     */
+    public void run(Supplier<ProgressBar> progressBarSupplier) {
         for (Inserter insert : inserts) {
-            service.post(GoodDTO.builder()
-                    .isMapResource(insert.isMapResource)
-                    .name(insert.name)
-                    .remarks(insert.remarks)
-                    .build());
+            try {
+                service.post(GoodDTO.builder()
+                        .isMapResource(insert.isMapResource)
+                        .name(insert.name)
+                        .remarks(insert.remarks)
+                        .build());
+            } catch (Exception ignored) {
+            }
+            progressBarSupplier.get();
         }
     }
 }

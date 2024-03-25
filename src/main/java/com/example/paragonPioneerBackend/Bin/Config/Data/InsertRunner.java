@@ -1,9 +1,10 @@
 package com.example.paragonPioneerBackend.Bin.Config.Data;
 
+import com.example.paragonPioneerBackend.Bin.Config.Data.EntityInserters.*;
 import com.example.paragonPioneerBackend.Bin.Security.AuthServices.AuthenticationService;
 import com.example.paragonPioneerBackend.Bin.Security.Requests.RegisterRequest;
-import com.example.paragonPioneerBackend.Bin.Config.Data.EntityInserters.*;
 import lombok.RequiredArgsConstructor;
+import me.tongfei.progressbar.ProgressBar;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Configuration;
@@ -39,17 +40,26 @@ public class InsertRunner implements ApplicationRunner {
      */
     @Override
     public void run(ApplicationArguments args) {
-        authenticationService.register(RegisterRequest.builder()
-                .email("amin@user.de")
-                .password("admin")
-                .build());
+        long amount = goodInserter.getInsertsLength() + populationInserter.getInsertsLength() +
+                recipeInserter.getInsertsLength() + populationRequirementInserter.getInsertsLength() +
+                buildingInserter.getInsertsLength();
 
-        goodInserter.run();
-        populationInserter.run();
-        recipeInserter.run();
-        populationRequirementInserter.run();
-        buildingInserter.run();
+        try (ProgressBar pb = new ProgressBar("Data Insertion", amount + 1)) {
+            try {
+                authenticationService.register(RegisterRequest.builder()
+                        .email("amin@user.de")
+                        .password("admin")
+                        .build());
+            } catch (Exception ignored) {
+            }
+            pb.step();
 
+            goodInserter.run(pb::step);
+            populationInserter.run(pb::step);
+            recipeInserter.run(pb::step);
+            populationRequirementInserter.run(pb::step);
+            buildingInserter.run(pb::step);
+        }
         /*
         todo: the following inserter are not havely required, and will be implemented after the 0.1 release
          */

@@ -6,7 +6,10 @@ import com.example.paragonPioneerBackend.Service.GoodService;
 import com.example.paragonPioneerBackend.Service.PopulationService;
 import com.example.paragonPioneerBackend.Service.Population_RequirementService;
 import lombok.RequiredArgsConstructor;
+import me.tongfei.progressbar.ProgressBar;
 import org.springframework.stereotype.Component;
+
+import java.util.function.Supplier;
 
 /**
  * Component responsible for seeding the database with initial data representing the relationships
@@ -34,30 +37,41 @@ public class Population_RequirementInserter {
     };
 
     /**
-     * Executes the insertion of predefined population requirement data into the database.
-     * For each record, it resolves the IDs of populations and goods based on their names and
-     * creates associations detailing the consumption and production rates of goods by populations,
-     * along with identifying basic needs.
+     * Returns the number of data insertion tasks for population requirements.
+     *
+     * @return The number of data insertion tasks.
      */
-    public void run() {
+    public int getInsertsLength() {
+        return inserts.length;
+    }
+
+    /**
+     * Executes the data insertion tasks for population requirements.
+     * This method is called by the InsertRunner component, providing an entry point
+     * for running the inserter components.
+     *
+     * @param progressBarSupplier A supplier for a progress bar to display the progress of the data insertion tasks.
+     */
+    public void run(Supplier<ProgressBar> progressBarSupplier) {
         for (Inserter insert : inserts) {
-            String goodId = null;
-            String populationId = null;
             try {
+                String goodId = null;
+                String populationId = null;
                 goodId = goodService.findByName(insert.goodName).getId().toString();
                 populationId = populationService.findByName(insert.populationName).getId().toString();
-            } catch (EntityNotFoundException ignored) {
+
+                Population_RequirementDTO dto = Population_RequirementDTO.builder()
+                        .goodId(goodId)
+                        .populationId(populationId)
+                        .consumption(insert.consumption)
+                        .produce(insert.produce)
+                        .isBasic(insert.isBasic)
+                        .build();
+
+                populationRequirementService.post(dto);
+            } catch (Exception ignored) {
             }
-
-            Population_RequirementDTO dto = Population_RequirementDTO.builder()
-                    .goodId(goodId)
-                    .populationId(populationId)
-                    .consumption(insert.consumption)
-                    .produce(insert.produce)
-                    .isBasic(insert.isBasic)
-                    .build();
-
-            populationRequirementService.post(dto);
+            progressBarSupplier.get();
         }
     }
 }

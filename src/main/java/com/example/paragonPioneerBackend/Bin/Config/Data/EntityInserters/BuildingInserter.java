@@ -3,11 +3,13 @@ package com.example.paragonPioneerBackend.Bin.Config.Data.EntityInserters;
 import com.example.paragonPioneerBackend.Dto.BuildingDTO;
 import com.example.paragonPioneerBackend.Dto.PopulationBuildingDTO;
 import com.example.paragonPioneerBackend.Dto.ProductionBuildingDTO;
-import com.example.paragonPioneerBackend.Exception.EntityNotFoundException;
 import com.example.paragonPioneerBackend.Service.BuildingService;
 import com.example.paragonPioneerBackend.Service.RecipeService;
 import lombok.RequiredArgsConstructor;
+import me.tongfei.progressbar.ProgressBar;
 import org.springframework.stereotype.Component;
+
+import java.util.function.Supplier;
 
 /**
  * A component responsible for seeding the database with initial data for buildings at application startup.
@@ -127,28 +129,46 @@ public class BuildingInserter {
     };
 
     /**
-     * Executes the insertion of the predefined building data into the database.
-     * Population buildings are added directly, while production buildings are added
-     * with references to their corresponding recipes, identified by name through the RecipeService.
+     * Returns the number of building records to be inserted into the database.
+     *
+     * @return The number of building records to be inserted.
      */
-    public void run() {
-        buildingService.post(PopulationBuildingDTO.builder().name("Pioneer's Hut").capacity(10).remarks("").build());
+    public int getInsertsLength() {
+        return inserts.length + 1; // For the One Pioneers Hud building
+    }
+
+    /**
+     * Executes the insertion of the predefined building data into the database. It creates population and production
+     * buildings based on the provided records, ensuring the application is populated with essential data regarding
+     * the buildings available for construction and production. This method is particularly useful for development
+     * and testing environments, providing a consistent starting point for building-related functionalities.
+     *
+     * @param progressBarSupplier A supplier for a progress bar to update the progress of the data insertion.
+     */
+    public void run(Supplier<ProgressBar> progressBarSupplier) {
+        // Insert population buildings
+        try {
+            buildingService.post(PopulationBuildingDTO.builder().name("Pioneer's Hut").capacity(10).remarks("").build());
+        } catch (Exception ignored) {
+        }
+        progressBarSupplier.get();
+
+        // Additional population buildings omitted for brevity
 
         for (Inserter insert : inserts) {
-            String recipeId = null;
             try {
+                String recipeId = null;
                 recipeId = recipeService.findByName(insert.recipe).getId().toString();
-            } catch (EntityNotFoundException ignored) {
+
+                buildingService.post(ProductionBuildingDTO.builder()
+                        .name(insert.name)
+                        .remarks(insert.remarks)
+                        .idOfRecipe(recipeId)
+                        .productionPerMinute(insert.productionPerMinute)
+                        .build());
+            } catch (Exception ignored) {
             }
-
-            ProductionBuildingDTO dto = ProductionBuildingDTO.builder()
-                    .name(insert.name)
-                    .remarks(insert.remarks)
-                    .productionPerMinute(insert.productionPerMinute)
-                    .idOfRecipe(recipeId)
-                    .build();
-
-            buildingService.post(dto);
+            progressBarSupplier.get();
         }
     }
 }

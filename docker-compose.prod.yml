@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+
+    api_service:
+      build:
+          context: .
+          dockerfile: dockerfile
+      container_name: 'paragonPioneerBeApi'
+      restart: always
+      ports:
+        - "8080:8080"
+      environment:
+        - spring.datasource.url=jdbc:mysql://mySql:3306/ppAssemblyLineBa
+      depends_on:
+        - mysql
+
+    mysql:
+      image: 'mysql:8.0'
+      container_name: 'paragonPioneerBeDatabase'
+      restart: always
+      environment:
+        MYSQL_ROOT_PASSWORD: 'password'
+        MYSQL_DATABASE: 'ppAssemblyLineBa'
+      volumes:
+        - "./sql/schema.sql:/docker-entrypoint-initdb.d/1.sql"
+      ports:
+        - "3306:3306"

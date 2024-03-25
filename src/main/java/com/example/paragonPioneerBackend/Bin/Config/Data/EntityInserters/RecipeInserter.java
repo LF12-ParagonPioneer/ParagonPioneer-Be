@@ -4,7 +4,10 @@ import com.example.paragonPioneerBackend.Dto.RecipeDTO;
 import com.example.paragonPioneerBackend.Service.GoodService;
 import com.example.paragonPioneerBackend.Service.RecipeService;
 import lombok.RequiredArgsConstructor;
+import me.tongfei.progressbar.ProgressBar;
 import org.springframework.stereotype.Component;
+
+import java.util.function.Supplier;
 
 /**
  * A component designed to seed the database with initial recipe data upon application startup.
@@ -135,36 +138,48 @@ public class RecipeInserter {
     };
 
     /**
-     * Executes the insertion of predefined recipe data into the database.
-     * For each record, resolves the IDs of input and output goods based on their names,
-     * creating a comprehensive and interlinked set of recipes that define how goods are
-     * produced within the application.
+     * Retrieves the number of recipes to be seeded in the database.
+     *
+     * @return The number of recipes as an integer.
      */
-    public void run() {
+    public int getInsertsLength() {
+        return inserts.length;
+    }
+
+    /**
+     * Runs the seeding process for the recipe data, creating recipe entities and persisting them in the database.
+     *
+     * @param progressBarSupplier A supplier for a progress bar to display the progress of the seeding process.
+     */
+    public void run(Supplier<ProgressBar> progressBarSupplier) {
         for (Inserter insert : inserts) {
-            recipeService.post(RecipeDTO.builder()
-                    .output(getIdOrNull(insert.output))
-                    .input1(getIdOrNull(insert.i1))
-                    .input2(getIdOrNull(insert.i2))
-                    .input3(getIdOrNull(insert.i3))
-                    .input4(getIdOrNull(insert.i4))
-                    .input5(getIdOrNull(insert.i5))
-                    .input6(getIdOrNull(insert.i5))
-                    .input7(getIdOrNull(insert.i6))
-                    .input8(getIdOrNull(insert.i7))
-                    .input9(getIdOrNull(insert.i8))
-                    .input10(getIdOrNull(insert.i10))
-                    .quantityOfInput1(insert.q1)
-                    .quantityOfInput2(insert.q2)
-                    .quantityOfInput3(insert.q3)
-                    .quantityOfInput4(insert.q4)
-                    .quantityOfInput5(insert.q5)
-                    .quantityOfInput6(insert.q6)
-                    .quantityOfInput7(insert.q7)
-                    .quantityOfInput8(insert.q8)
-                    .quantityOfInput9(insert.q9)
-                    .quantityOfInput10(insert.q10)
-                    .build());
+            try {
+                recipeService.post(RecipeDTO.builder()
+                        .output(getIdOrNull(insert.output))
+                        .input1(getIdOrNull(insert.i1))
+                        .input2(getIdOrNull(insert.i2))
+                        .input3(getIdOrNull(insert.i3))
+                        .input4(getIdOrNull(insert.i4))
+                        .input5(getIdOrNull(insert.i5))
+                        .input6(getIdOrNull(insert.i5))
+                        .input7(getIdOrNull(insert.i6))
+                        .input8(getIdOrNull(insert.i7))
+                        .input9(getIdOrNull(insert.i8))
+                        .input10(getIdOrNull(insert.i10))
+                        .quantityOfInput1(insert.q1)
+                        .quantityOfInput2(insert.q2)
+                        .quantityOfInput3(insert.q3)
+                        .quantityOfInput4(insert.q4)
+                        .quantityOfInput5(insert.q5)
+                        .quantityOfInput6(insert.q6)
+                        .quantityOfInput7(insert.q7)
+                        .quantityOfInput8(insert.q8)
+                        .quantityOfInput9(insert.q9)
+                        .quantityOfInput10(insert.q10)
+                        .build());
+            } catch (Exception ignored) {
+            }
+            progressBarSupplier.get();
         }
     }
 
