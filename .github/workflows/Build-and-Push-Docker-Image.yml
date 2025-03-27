@@ -18,10 +18,10 @@ jobs:
           java-version: '17'
 
       - name: Build
-        run: ./gradlew build
+        run: ./gradle build
 
       - name: Test
-        run: ./gradlew test
+        run: ./gradle test
 
   deploy:
     runs-on: ubuntu-latest
